@@ -26,10 +26,10 @@ async def purge(ctx, amount: int=None, limit=None):
                 time.sleep(float(limit))
             except discord.errors.Forbidden as e:
                 if e.code == 50021: 
-                    count += 1
+                    amount += 1
                     pass
         else:
-            count += 1
+            amount += 1
     await ctx.send(f"`deleted`", delete_after=5)
     print(Fore.GREEN+"[FINISHED]"+Fore.RESET+f" Count: {count}")
 

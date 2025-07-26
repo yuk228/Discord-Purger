@@ -1,3 +1,4 @@
 colorama
+audioop-lts
 python-dotenv
 discord.py-self

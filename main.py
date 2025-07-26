@@ -1,22 +1,32 @@
-import discord, json, time
+import os
+import time
+import discord
 from discord.ext import commands
 from colorama import Fore
+from dotenv import load_dotenv
 
-with open("./data/config.json", "r") as f:
-    config = json.load(f)
+load_dotenv()
 
-bot = commands.Bot(command_prefix=config["prefix"], help_command=None, self_bot=True)
+PREFIX = os.getenv("PREFIX")
+TOKEN = os.getenv("TOKEN")
+
+if not PREFIX or not TOKEN:
+    raise ValueError("PREFIX or TOKEN is not set")
+
+bot = commands.Bot(command_prefix=PREFIX, help_command=None, self_bot=True)
 
 @bot.event
 async def on_ready():
     print(f"[Logged in as {bot.user}]\nLatency: {bot.latency*1000}ms")
 
 @bot.command()
-async def purge(ctx, amount: int=None, limit=None):
-    if amount is None and limit is None:
-        await ctx.reply("message purge command.\nusage: -purge [amount] [float(time)]")
+async def purge(ctx, channel_id: int, amount: int, limit: float):
     count = 0
-    messages = [message async for message in ctx.channel.history(limit=amount + 1)]
+    channel = bot.get_channel(int(channel_id))
+    if not channel:
+        await ctx.reply(f"Channel not found: `{channel_id}`")
+        return
+    messages = [message async for message in channel.history(limit=amount + 1)]
     for msg in messages:
         if msg.author == bot.user:
             try:
@@ -33,4 +43,13 @@ async def purge(ctx, amount: int=None, limit=None):
     await ctx.send(f"`deleted`", delete_after=5)
     print(Fore.GREEN+"[FINISHED]"+Fore.RESET+f" Count: {count}")
 
-bot.run(config["token"])
+@purge.error
+async def purge_error(ctx, error):
+    if isinstance(error, commands.MissingRequiredArgument):
+        usage = f"```{PREFIX}purge [channel_id] [amount] [float(time)]\n{PREFIX}purge 1370064823085170698 100 1.45```"
+        await ctx.reply(usage, delete_after=10)
+    else:
+        raise error
+
+if __name__ == "__main__":
+    bot.run(TOKEN)

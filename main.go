@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
@@ -100,10 +101,23 @@ func HandlePurge(ctx *disgolf.MessageCtx) {
 
 		parts := make(chan []*discordgo.Message)
 		go GetMessages(ctx, channelID, max_message_count, parts)
+
 		for messages := range parts {
-			for i, msg := range messages {
-				log.Printf("[LOGS: %d] %+v\n", i, msg)
+			var target_msgs []string
+			for _, msg := range messages {
+
+				if slices.Contains(strings.Split(os.Getenv("OWNER_IDS"), ","), msg.Author.ID) {
+					target_msgs = append(target_msgs, msg.ID)
+				}
 			}
+			for _, target_msg := range target_msgs {
+				err := ctx.ChannelMessageDelete(channelID, target_msg)
+				if err != nil {
+					log.Fatal(err.Error())
+				}
+				time.Sleep(time.Microsecond * 100)
+			}
+
 		}
 
 	} else {

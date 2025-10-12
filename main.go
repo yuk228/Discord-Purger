@@ -106,7 +106,7 @@ func HandlePurge(ctx *disgolf.MessageCtx) {
 			var target_msgs []string
 			for _, msg := range messages {
 
-				if slices.Contains(strings.Split(os.Getenv("OWNER_IDS"), ","), msg.Author.ID) {
+				if slices.Contains(strings.Split(os.Getenv("OWNER_IDS"), ","), msg.Author.ID) && !slices.Contains([]discordgo.MessageType{3, 4, 5}, msg.Type) {
 					target_msgs = append(target_msgs, msg.ID)
 				}
 			}

@@ -106,6 +106,8 @@ func HandlePurge(ctx *disgolf.MessageCtx) {
 			var target_msgs []string
 			for _, msg := range messages {
 
+				// []discordgo.MessageType{MessageTypeCall, MessageTypeChannelNameChange, MessageTypeChannelIconChange}
+				// これらのメッセージは削除不可な為除外 (groupでのみ発生)
 				if slices.Contains(strings.Split(os.Getenv("OWNER_IDS"), ","), msg.Author.ID) && !slices.Contains([]discordgo.MessageType{3, 4, 5}, msg.Type) {
 					target_msgs = append(target_msgs, msg.ID)
 				}

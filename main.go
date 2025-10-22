@@ -72,6 +72,13 @@ func main() {
 		MessageMiddlewares: []disgolf.MessageHandler{disgolf.MessageHandlerFunc(HasOwnerMiddleware)},
 	})
 
+	bot.Router.Register(&disgolf.Command{
+		Name:               "send",
+		Description:        "send msg",
+		MessageHandler:     disgolf.MessageHandlerFunc(sendMessage),
+		MessageMiddlewares: []disgolf.MessageHandler{disgolf.MessageHandlerFunc(HasOwnerMiddleware)},
+	})
+
 	stopBot := make(chan os.Signal, 1)
 	signal.Notify(stopBot, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-stopBot
@@ -86,16 +93,38 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func GetMessages(ctx *disgolf.MessageCtx, channelID string, limit int, m chan []*discordgo.Message) {
-	messages, err := ctx.ChannelMessages(channelID, limit, "", "", "")
-	if err != nil {
-		log.Printf("Error getting messages: %s", err)
+	var allMessages []*discordgo.Message
+	var beforeID string = ""
+
+	for {
+		messages, err := ctx.ChannelMessages(channelID, limit, beforeID, "", "")
+		if err != nil {
+			ctx.Reply(fmt.Sprintf("```Error getting messages: %s```", err.Error()), false)
+			break
+		}
+		if len(messages) == 0 {
+			log.Fatal("messages not found")
+			break
+		}
+		allMessages = append(allMessages, messages...)
+		
+		log.Printf("messages: %d, last messageID: %s", len(messages), messages[len(messages)-1].ID)
+		beforeID = messages[len(messages)-1].ID
+		if len(messages) < limit {
+			break
+		}
 	}
-	m <- messages
+	m <- allMessages
 }
 
 func HandlePurge(ctx *disgolf.MessageCtx) {
 	if len(ctx.Arguments) >= 1 {
 		channelID := ctx.Arguments[0]
+		
+		if len([]rune (channelID)) != 19 {
+			ctx.Reply(fmt.Sprintln("length of channel id must be 19"), false)
+			return
+		}
 		// amount := ctx.Arguments[1]
 		// limit := ctx.Arguments[2]
 
@@ -119,9 +148,22 @@ func HandlePurge(ctx *disgolf.MessageCtx) {
 				}
 				time.Sleep(time.Microsecond * 100)
 			}
-
 		}
+	} else {
+		ctx.Reply(fmt.Sprintf("```%spurge [channel_id] [amount] [float(time)]\n%spurge 1234567891234567891 100 1.45```", prefix, prefix), false)
+	}
+}
 
+func sendMessage(ctx *disgolf.MessageCtx) {
+	if len(ctx.Arguments) >= 1 {
+		amount := ctx.Arguments[0]
+		amountInt, err := strconv.Atoi(amount)
+		if err != nil {
+			log.Fatal("error converting type")
+		}
+		for i := 0; i < amountInt; i++ {
+			ctx.Reply(fmt.Sprintf("%d", i), false)
+		}
 	} else {
 		ctx.Reply(fmt.Sprintf("```%spurge [channel_id] [amount] [float(time)]\n%spurge 1234567891234567891 100 1.45```", prefix, prefix), false)
 	}

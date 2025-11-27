@@ -15,5 +15,4 @@ USER 65532
 
 COPY --from=builder /app/start .
 
-# メインコマンド（固定）
 ENTRYPOINT ["./start"]

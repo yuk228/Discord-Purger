@@ -1,10 +1,9 @@
-module main
+module github.com/yuk228/Discord-Purger
 
 go 1.25.1
 
 require (
 	github.com/bwmarrin/discordgo v0.29.0
-	github.com/joho/godotenv v1.5.1
 	github.com/yuk228/disgolf v0.0.0-20251012164513-1f0711de3757
 )
 

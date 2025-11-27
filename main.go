@@ -143,6 +143,7 @@ func HandlePurge(ctx *disgolf.MessageCtx) {
 			}
 			for _, target_msg := range target_msgs {
 				err := ctx.ChannelMessageDelete(channelID, target_msg)
+				log.Printf("%s", target_msg)
 				if err != nil {
 					log.Fatal(err.Error())
 				}
@@ -163,6 +164,7 @@ func sendMessage(ctx *disgolf.MessageCtx) {
 		}
 		for i := 0; i < amountInt; i++ {
 			ctx.Reply(fmt.Sprintf("%d", i), false)
+			time.Sleep(2 * time.Second)
 		}
 	} else {
 		ctx.Reply(fmt.Sprintf("```%spurge [channel_id] [amount] [float(time)]\n%spurge 1234567891234567891 100 1.45```", prefix, prefix), false)
@@ -174,3 +176,4 @@ func HasOwnerMiddleware(ctx *disgolf.MessageCtx) {
 		ctx.Next()
 	}
 }
+

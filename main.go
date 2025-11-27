@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	prefix            string
-	token             string
+	prefix string
+	token  string
 )
 
 func envLoad() {
@@ -44,7 +44,6 @@ func main() {
 	fmt.Printf("[Logged in as %s]\n", bot.State.User.Username)
 	fmt.Printf("Latency: %f ms\n\n", bot.HeartbeatLatency().Seconds())
 
-	bot.AddHandler(messageCreate)
 	bot.AddHandler(bot.Router.MakeMessageHandler(&disgolf.MessageHandlerConfig{
 		Prefixes:      []string{prefix},
 		MentionPrefix: false,
@@ -64,14 +63,6 @@ func main() {
 	<-stopBot
 }
 
-func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
-	log.Printf("[Received message] %s from %s\n", m.Content, m.Author.Username)
-	if !strings.HasPrefix(m.Content, prefix) {
-		return
-	}
-	log.Printf("[Command detected] %s\n", m.Content)
-}
-
 func GetMessages(ctx *disgolf.MessageCtx, channelID string, limit int, m chan []*discordgo.Message) {
 	var beforeID string = ""
 
@@ -85,11 +76,11 @@ func GetMessages(ctx *disgolf.MessageCtx, channelID string, limit int, m chan []
 			log.Println("No more messages")
 			break
 		}
-		
+
 		log.Printf("messages: %d, last messageID: %s", len(messages), messages[len(messages)-1].ID)
-		
+
 		m <- messages
-		
+
 		beforeID = messages[len(messages)-1].ID
 		if len(messages) < limit {
 			break
@@ -101,8 +92,8 @@ func GetMessages(ctx *disgolf.MessageCtx, channelID string, limit int, m chan []
 func HandlePurge(ctx *disgolf.MessageCtx) {
 	if len(ctx.Arguments) >= 1 {
 		channelID := ctx.Arguments[0]
-		
-		if len([]rune (channelID)) != 19 {
+
+		if len([]rune(channelID)) != 19 {
 			ctx.Reply(fmt.Sprintln("length of channel id must be 19"), false)
 			return
 		}
@@ -139,4 +130,3 @@ func HasOwnerMiddleware(ctx *disgolf.MessageCtx) {
 		ctx.Next()
 	}
 }
-

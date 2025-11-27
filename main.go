@@ -6,35 +6,22 @@ import (
 	"os"
 	"os/signal"
 	"slices"
-	"strconv"
 	"strings"
 	"syscall"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/joho/godotenv"
 	"github.com/yuk228/disgolf"
 )
 
 var (
 	prefix            string
 	token             string
-	max_message_count int
 )
 
 func envLoad() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
 	prefix = os.Getenv("PREFIX")
 	token = os.Getenv("TOKEN")
-	max_message_count, err = strconv.Atoi(os.Getenv("MAX_MESSAGE_COUNT"))
-	if err != nil {
-		log.Printf("Error converting type")
-	}
-
 	if prefix == "" || token == "" {
 		log.Fatal("PREFIX or TOKEN is not set")
 	}
@@ -63,19 +50,12 @@ func main() {
 		MentionPrefix: false,
 	}))
 
-	bot.State.MaxMessageCount = max_message_count
+	bot.State.MaxMessageCount = 100
 
 	bot.Router.Register(&disgolf.Command{
 		Name:               "purge",
 		Description:        "purge self messages",
 		MessageHandler:     disgolf.MessageHandlerFunc(HandlePurge),
-		MessageMiddlewares: []disgolf.MessageHandler{disgolf.MessageHandlerFunc(HasOwnerMiddleware)},
-	})
-
-	bot.Router.Register(&disgolf.Command{
-		Name:               "send",
-		Description:        "send msg",
-		MessageHandler:     disgolf.MessageHandlerFunc(sendMessage),
 		MessageMiddlewares: []disgolf.MessageHandler{disgolf.MessageHandlerFunc(HasOwnerMiddleware)},
 	})
 
@@ -93,7 +73,6 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func GetMessages(ctx *disgolf.MessageCtx, channelID string, limit int, m chan []*discordgo.Message) {
-	var allMessages []*discordgo.Message
 	var beforeID string = ""
 
 	for {
@@ -103,18 +82,20 @@ func GetMessages(ctx *disgolf.MessageCtx, channelID string, limit int, m chan []
 			break
 		}
 		if len(messages) == 0 {
-			log.Fatal("messages not found")
+			log.Println("No more messages")
 			break
 		}
-		allMessages = append(allMessages, messages...)
 		
 		log.Printf("messages: %d, last messageID: %s", len(messages), messages[len(messages)-1].ID)
+		
+		m <- messages
+		
 		beforeID = messages[len(messages)-1].ID
 		if len(messages) < limit {
 			break
 		}
 	}
-	m <- allMessages
+	close(m)
 }
 
 func HandlePurge(ctx *disgolf.MessageCtx) {
@@ -125,11 +106,9 @@ func HandlePurge(ctx *disgolf.MessageCtx) {
 			ctx.Reply(fmt.Sprintln("length of channel id must be 19"), false)
 			return
 		}
-		// amount := ctx.Arguments[1]
-		// limit := ctx.Arguments[2]
 
 		parts := make(chan []*discordgo.Message)
-		go GetMessages(ctx, channelID, max_message_count, parts)
+		go GetMessages(ctx, channelID, 100, parts)
 
 		for messages := range parts {
 			var target_msgs []string
@@ -151,23 +130,7 @@ func HandlePurge(ctx *disgolf.MessageCtx) {
 			}
 		}
 	} else {
-		ctx.Reply(fmt.Sprintf("```%spurge [channel_id] [amount] [float(time)]\n%spurge 1234567891234567891 100 1.45```", prefix, prefix), false)
-	}
-}
-
-func sendMessage(ctx *disgolf.MessageCtx) {
-	if len(ctx.Arguments) >= 1 {
-		amount := ctx.Arguments[0]
-		amountInt, err := strconv.Atoi(amount)
-		if err != nil {
-			log.Fatal("error converting type")
-		}
-		for i := 0; i < amountInt; i++ {
-			ctx.Reply(fmt.Sprintf("%d", i), false)
-			time.Sleep(2 * time.Second)
-		}
-	} else {
-		ctx.Reply(fmt.Sprintf("```%spurge [channel_id] [amount] [float(time)]\n%spurge 1234567891234567891 100 1.45```", prefix, prefix), false)
+		ctx.Reply(fmt.Sprintf("```%spurge [channel_id]\n%spurge 1234567891234567891```", prefix, prefix), false)
 	}
 }
 

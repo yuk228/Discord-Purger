@@ -64,7 +64,7 @@ func HandlePurge(prefix string) func(ctx *disgolf.MessageCtx) {
 					err := ctx.ChannelMessageDelete(channelID, target_msg)
 					log.Printf("%s", target_msg)
 					if err != nil {
-						log.Fatal(err.Error())
+						log.Printf("%s", err.Error())
 					}
 					time.Sleep(time.Microsecond * 100)
 				}

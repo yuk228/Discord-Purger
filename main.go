@@ -55,6 +55,13 @@ func main() {
 		MessageMiddlewares: []disgolf.MessageHandler{disgolf.MessageHandlerFunc(middleware.HasOwnerMiddleware)},
 	})
 
+	bot.Router.Register(&disgolf.Command{
+		Name:               "purge2",
+		Description:        "purge self messages using search api",
+		MessageHandler:     disgolf.MessageHandlerFunc(commands.HandlePurge2(prefix)),
+		MessageMiddlewares: []disgolf.MessageHandler{disgolf.MessageHandlerFunc(middleware.HasOwnerMiddleware)},
+	})
+
 	stopBot := make(chan os.Signal, 1)
 	signal.Notify(stopBot, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-stopBot

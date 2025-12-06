@@ -1,31 +1,36 @@
 # Discord Purger
-Discordで自分のメッセージを消去するbot
+
+Discord で自分のメッセージを消去する bot
 
 アカウント消す時に使うかもしれません。
 
 ## Setup
-Dockerが必要です。
 
-1. `.env.example`を`.env`にrename
+Docker が必要です。
+
+1. `.env.example`を`.env`に rename
 
 2. `docker compose up --build`
 
 - `PREFIX`: Command Prefix
 - `TOKEN`: Discord Token
-- `OWNER_IDS`: あなたのDiscord ID
+- `OWNER_IDS`: あなたの Discord ID
 
 ## Commands
 
 - `purge [channel_id]`: 指定されたチャンネルのメッセージを削除します
-- `purge2 [channel_id]`: Discordのsearch apiを使用してメッセージ取得/削除します
+- `purge2 [guild_id]`: Discord の search api を使用してメッセージ取得/削除します
 
-`purge`はチャンネル内のメッセージを100件ずつ全て取得していきます。
+`purge`はチャンネル内のメッセージを 100 件ずつ全て取得し、削除していきます。
 
-`purge2`は現在DM, グループでのみ使用可能です。
+`purge2`は指定した guild_id のメッセージを全て削除しますが、**なぜか一回じゃ消しきれません**
 
-いずれもチャンネル内のメッセージ全てが対象です。
+`Deleted 0 messages`になるまで何回か実行して下さい。
+
+また、削除について RateLimit を考慮していませんが、messages 関連の api が 429 返ってくるだけで特にペナルティはありません。少し待てば直ります。
 
 ## 注意事項
-- RateLimitに引っかかってアカウントが制限を受けるかもしれません
-- selfbotとして使用した場合、Discordの規約に抵触します
+
+- RateLimit に引っかかってアカウントが制限を受けるかもしれません
+- selfbot として使用した場合、Discord の規約に抵触します
 - いかなる場合も、責任は実行者にあります

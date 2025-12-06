@@ -77,7 +77,7 @@ func searchAndDelete(ctx *disgolf.MessageCtx, guildID string) {
 		time.Sleep(1450 * time.Millisecond)
 	}
 
-	log.Printf("```deleted %d messages```", totalDeleted)
+	log.Printf("[Deleted %d messages]", totalDeleted)
 }
 
 // https://discord.com/api/v9/guilds/{guild_id}/messages/search?author_id={author_id}&sort_by=timestamp&sort_order=desc&offset=0

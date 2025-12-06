@@ -20,7 +20,6 @@ type SearchResponse struct {
 	AnalyticsID              string                   `json:"analytics_id"`
 	DoingDeepHistoricalIndex bool                     `json:"doing_deep_historical_index"`
 	TotalResults             int                      `json:"total_results"`
-	Channels                 []interface{}            `json:"channels"`
 	Messages                 [][]*discordgo.Message  `json:"messages"`
 }
 
@@ -28,25 +27,25 @@ func HandlePurge2(prefix string) func(ctx *disgolf.MessageCtx) {
 	return func(ctx *disgolf.MessageCtx) {
 		switch len(ctx.Arguments) {
 		case 0:
-			ctx.Reply(fmt.Sprintf("```%spurge2 [channel_id] \n%spurge2 1234567891234567891```", prefix, prefix), false)
+			ctx.Reply(fmt.Sprintf("```%spurge2 [guild_id] \n%spurge2 1234567891234567891```", prefix, prefix), false)
 
 		case 1:
-			channelID := ctx.Arguments[0]
-			if len([]rune(channelID)) != 19 {
-				ctx.Reply(fmt.Sprintln("length of channel id must be 19"), false)
+			guildID := ctx.Arguments[0]
+			if len([]rune(guildID)) != 19 {
+				ctx.Reply(fmt.Sprintln("length of guild id must be 19"), false)
 				return
 			}
-			searchAndDelete(ctx, channelID)
+			searchAndDelete(ctx, guildID)
 		}
 	}
 }
 
-func searchAndDelete(ctx *disgolf.MessageCtx, channelID string) {
+func searchAndDelete(ctx *disgolf.MessageCtx, guildID string) {
 	offset := 0
 	totalDeleted := 0
 
 	for {
-		messages, hasMore, err := searchMessages(ctx, channelID, offset)
+		messages, hasMore, err := searchMessages(ctx, guildID, offset)
 		if err != nil {
 			log.Printf("```error searching messages: %s```", err.Error())
 			return
@@ -59,7 +58,7 @@ func searchAndDelete(ctx *disgolf.MessageCtx, channelID string) {
 		ownerIDs := strings.Split(os.Getenv("OWNER_IDS"), ",")
 		for _, msg := range messages {
 			if slices.Contains(ownerIDs, msg.Author.ID) && !slices.Contains([]discordgo.MessageType{3, 4, 5}, msg.Type) {
-				err := ctx.ChannelMessageDelete(channelID, msg.ID)
+				err := ctx.ChannelMessageDelete(msg.ChannelID, msg.ID)
 				if err != nil {
 					log.Printf("error deleting message %s: %s", msg.ID, err.Error())
 				} else {
@@ -81,11 +80,11 @@ func searchAndDelete(ctx *disgolf.MessageCtx, channelID string) {
 	log.Printf("```deleted %d messages```", totalDeleted)
 }
 
-
-func searchMessages(ctx *disgolf.MessageCtx, channelID string, offset int) ([]*discordgo.Message, bool, error) {
+// https://discord.com/api/v9/guilds/{guild_id}/messages/search?author_id={author_id}&sort_by=timestamp&sort_order=desc&offset=0
+func searchMessages(ctx *disgolf.MessageCtx, guildID string, offset int) ([]*discordgo.Message, bool, error) {
 	session := ctx.Session
 
-	apiURL := fmt.Sprintf("https://discord.com/api/v9/channels/%s/messages/search", channelID)
+	apiURL := fmt.Sprintf("https://discord.com/api/v9/guilds/%s/messages/search", guildID)
 	reqURL, err := url.Parse(apiURL)
 	if err != nil {
 		return nil, false, err

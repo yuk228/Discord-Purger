@@ -43,11 +43,6 @@ func HandlePurge(prefix string) func(ctx *disgolf.MessageCtx) {
 		if len(ctx.Arguments) >= 1 {
 			channelID := ctx.Arguments[0]
 
-			if len([]rune(channelID)) != 19 {
-				ctx.Reply(fmt.Sprintln("length of channel id must be 19"), false)
-				return
-			}
-
 			parts := make(chan []*discordgo.Message)
 			go GetMessages(ctx, channelID, 100, parts)
 

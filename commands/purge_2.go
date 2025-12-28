@@ -31,10 +31,6 @@ func HandlePurge2(prefix string) func(ctx *disgolf.MessageCtx) {
 
 		case 1:
 			guildID := ctx.Arguments[0]
-			if len([]rune(guildID)) != 19 {
-				ctx.Reply(fmt.Sprintln("length of guild id must be 19"), false)
-				return
-			}
 			searchAndDelete(ctx, guildID)
 		}
 	}
